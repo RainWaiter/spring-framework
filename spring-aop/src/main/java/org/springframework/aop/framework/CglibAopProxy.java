@@ -187,6 +187,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 			enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
 			enhancer.setStrategy(new ClassLoaderAwareUndeclaredThrowableStrategy(classLoader));
 
+			// 核心点：构建callback
 			Callback[] callbacks = getCallbacks(rootClass);
 			Class<?>[] types = new Class<?>[callbacks.length];
 			for (int x = 0; x < types.length; x++) {
@@ -286,6 +287,8 @@ class CglibAopProxy implements AopProxy, Serializable {
 		boolean isStatic = this.advised.getTargetSource().isStatic();
 
 		// Choose an "aop" interceptor (used for AOP calls).
+		// 通用的AOP拦截器，常用类
+		// 内部的intercept()逻辑和JdkDynamicAopProxy.invoke()基本一致
 		Callback aopInterceptor = new DynamicAdvisedInterceptor(this.advised);
 
 		// Choose a "straight to target" interceptor. (used for calls that are
@@ -311,7 +314,8 @@ class CglibAopProxy implements AopProxy, Serializable {
 				aopInterceptor,  // for normal advice
 				targetInterceptor,  // invoke target without considering advice, if optimized
 				new SerializableNoOp(),  // no override for methods mapped to this
-				targetDispatcher, this.advisedDispatcher,
+				targetDispatcher,
+				this.advisedDispatcher,
 				new EqualsInterceptor(this.advised),
 				new HashCodeInterceptor(this.advised)
 		};
@@ -637,6 +641,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 			this.advised = advised;
 		}
 
+		// intercept() 逻辑和JdkDynamicAopProxy的invoke()逻辑基本一致
 		@Override
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 			Object oldProxy = null;
@@ -664,11 +669,29 @@ class CglibAopProxy implements AopProxy, Serializable {
 					// Note that the final invoker must be an InvokerInterceptor, so we know
 					// it does nothing but a reflective operation on the target, and no hot
 					// swapping or fancy proxying.
+					/*
+					 * method中没有拦截器，则直接使用Java反射调用
+					 */
 					Object[] argsToUse = AopProxyUtils.adaptArgumentsIfNecessary(method, args);
 					retVal = methodProxy.invoke(target, argsToUse);
 				}
 				else {
 					// We need to create a method invocation...
+					/*
+					 * 存在拦截器， 构造执行器 CglibMethodInvocation( 继承 ReflectiveMethodInvocation )进行执行
+					 * 内部通过拦截器链chain进行执行，
+					 * 具体过程类似：
+					 * Interceptor-A.invoke()   ->  Interceptor-B.invoke()  ->  target.method()（java反射执行）
+					 * 调用结果逆袭返回：
+					 * Interceptor-A.invoke()   <-  Interceptor-B.invoke()  <-  target.method()（java反射执行）
+					 *
+					 * 每一个Interceptor都类似一个around通知，包裹了下一个 Interceptor 或 target的调用
+					 * 现以 TransactionInterceptor 事务拦截器为例，简单说明：
+					 * 1. 首先创建事务（具体是否创建根据情况而定）-- 前置
+					 * 2. 如果存在其他Interceptor,则调用下一个 Interceptor.invoke() 或者直接执行target的目标方法    -- 具体方法
+					 * 3. 然后根据 returnVal 或者 异常情况 进行rollback  or  commit  /  清理事务资源     -- 后置
+					 *
+					 */
 					retVal = new CglibMethodInvocation(proxy, target, method, args, targetClass, chain, methodProxy).proceed();
 				}
 				retVal = processReturnType(proxy, target, method, retVal);

@@ -40,6 +40,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 
 	@Override
 	public TransactionAttribute parseTransactionAnnotation(AnnotatedElement element) {
+		// 解析Spring自己的@Transaction注解类
 		AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(
 				element, Transactional.class);
 		if (attributes != null) {
@@ -55,6 +56,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 	}
 
 	protected TransactionAttribute parseTransactionAnnotation(AnnotationAttributes attributes) {
+		// @Transaction的注解信息封装为 RuleBasedTransactionAttribute 事务属性返回
 		RuleBasedTransactionAttribute rbta = new RuleBasedTransactionAttribute();
 
 		Propagation propagation = attributes.getEnum("propagation");

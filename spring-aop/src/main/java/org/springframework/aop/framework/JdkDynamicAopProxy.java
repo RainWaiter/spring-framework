@@ -119,6 +119,8 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 		}
 		Class<?>[] proxiedInterfaces = AopProxyUtils.completeProxiedInterfaces(this.advised, true);
 		findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
+
+		// 标准的JDK动态代理构建方式
 		return Proxy.newProxyInstance(classLoader, proxiedInterfaces, this);
 	}
 
@@ -183,6 +185,11 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 
 			if (this.advised.exposeProxy) {
 				// Make invocation available if necessary.
+				/*
+				* 根据exposeProxy属性判断，如果设置为true（默认false），则
+				* 通过 AopContext.currentProxy() 可以得到当前线程正在调用的代理类对象proxy
+				* 一般情况下使用率不高。
+				*/
 				oldProxy = AopContext.setCurrentProxy(proxy);
 				setProxyContext = true;
 			}
@@ -203,11 +210,29 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 				// We can skip creating a MethodInvocation: just invoke the target directly
 				// Note that the final invoker must be an InvokerInterceptor so we know it does
 				// nothing but a reflective operation on the target, and no hot swapping or fancy proxying.
+				/*
+				 * method中没有拦截器，则直接使用Java反射调用
+				 */
 				Object[] argsToUse = AopProxyUtils.adaptArgumentsIfNecessary(method, args);
 				retVal = AopUtils.invokeJoinpointUsingReflection(target, method, argsToUse);
 			}
 			else {
 				// We need to create a method invocation...
+				/*
+				 * 存在拦截器， 构造执行器ReflectiveMethodInvocation进行执行
+				 * 内部通过拦截器链chain进行执行，
+				 * 具体过程类似：
+				 * Interceptor-A.invoke()   ->  Interceptor-B.invoke()  ->  target.method()（java反射执行）
+				 * 调用结果逆袭返回：
+				 * Interceptor-A.invoke()   <-  Interceptor-B.invoke()  <-  target.method()（java反射执行）
+				 *
+				 * 每一个Interceptor都类似一个around通知，包裹了下一个 Interceptor 或 target的调用
+				 * 现以 TransactionInterceptor 事务拦截器为例，简单说明：
+				 * 1. 首先创建事务（具体是否创建根据情况而定）-- 前置
+				 * 2. 如果存在其他Interceptor,则调用下一个 Interceptor.invoke() 或者直接执行target的目标方法    -- 具体方法
+				 * 3. 然后根据 returnVal 或者 异常情况 进行rollback  or  commit  /  清理事务资源     -- 后置
+				 *
+				 */
 				invocation = new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain);
 				// Proceed to the joinpoint through the interceptor chain.
 				retVal = invocation.proceed();

@@ -74,6 +74,10 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * Cache of TransactionAttributes, keyed by method on a specific target class.
 	 * <p>As this base class is not marked Serializable, the cache will be recreated
 	 * after serialization - provided that the concrete subclass is Serializable.
+	 *
+	 * 映射:
+	 * 类的方法 -> TransactionAttribute
+	 * 典型的，当Spring解析到方法、类上面带有 @Transaction注解 ， 那么会将类方法和TransactionAttribute进行关联映射到此缓存
 	 */
 	private final Map<Object, TransactionAttribute> attributeCache =
 			new ConcurrentHashMap<Object, TransactionAttribute>(1024);
@@ -90,6 +94,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	@Override
 	public TransactionAttribute getTransactionAttribute(Method method, Class<?> targetClass) {
 		if (method.getDeclaringClass() == Object.class) {
+			// object的方法不支持事务
 			return null;
 		}
 
@@ -97,6 +102,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 		Object cacheKey = getCacheKey(method, targetClass);
 		TransactionAttribute cached = this.attributeCache.get(cacheKey);
 		if (cached != null) {
+			// 缓存已经存在
 			// Value will either be canonical value indicating there is no transaction attribute,
 			// or an actual transaction attribute.
 			if (cached == NULL_TRANSACTION_ATTRIBUTE) {
@@ -107,6 +113,9 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 			}
 		}
 		else {
+
+			// 解析method或Class中是否带有的@Transaction注解，并成功解析出事务属性（TransactionAttribute）
+			// 然后缓存
 			// We need to work it out.
 			TransactionAttribute txAttr = computeTransactionAttribute(method, targetClass);
 			// Put it in the cache.
@@ -149,6 +158,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	protected TransactionAttribute computeTransactionAttribute(Method method, Class<?> targetClass) {
 		// Don't allow no-public methods as required.
 		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
+			// 当设置为：必须public方法  && 当前method不是public方法，返回null
 			return null;
 		}
 
@@ -160,12 +170,14 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 		// If we are dealing with method with generic parameters, find the original method.
 		specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
 
+		// 首先解析method是否有@Transaction
 		// First try is the method in the target class.
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
 		if (txAttr != null) {
 			return txAttr;
 		}
 
+		// 然后解析method所在Class是否有@Transaction
 		// Second try is the transaction attribute on the target class.
 		txAttr = findTransactionAttribute(specificMethod.getDeclaringClass());
 		if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {

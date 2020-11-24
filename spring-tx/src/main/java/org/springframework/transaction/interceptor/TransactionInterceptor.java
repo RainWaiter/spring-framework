@@ -85,6 +85,9 @@ public class TransactionInterceptor extends TransactionAspectSupport implements 
 	}
 
 
+	/*
+	 * 事务处理的执行逻辑入口
+	 */
 	@Override
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
 		// Work out the target class: may be {@code null}.
@@ -96,7 +99,7 @@ public class TransactionInterceptor extends TransactionAspectSupport implements 
 		return invokeWithinTransaction(invocation.getMethod(), targetClass, new InvocationCallback() {
 			@Override
 			public Object proceedWithInvocation() throws Throwable {
-				return invocation.proceed();
+				return invocation.proceed();  // 返回invocation执行chain，执行下一个Interceptor
 			}
 		});
 	}

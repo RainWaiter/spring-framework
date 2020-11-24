@@ -240,6 +240,11 @@ public abstract class AopUtils {
 				if ((introductionAwareMethodMatcher != null &&
 						introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions)) ||
 						methodMatcher.matches(method, targetClass)) {
+					// if判断Pointcut是否可以可以处理指定method
+					// methodMatcher为： BeanFactoryTransactionAttributeSourceAdvisor 中的内部类( TransactionAttributeSourcePointcut 类型 )
+					// ( 其实前面的 Pointcut参数和 methodMatcher 为相同的对象 --- pc.getMethodMatcher() 内部返回了this  )
+					// TransactionAttributeSourcePointcut的matches()方法逻辑：
+					//   -- 就是会看给定的method或Class是否含有@Transaction注解并解析得到TransactionAttribute对象放入cache
 					return true;
 				}
 			}
@@ -291,6 +296,8 @@ public abstract class AopUtils {
 	 * @param clazz the target class
 	 * @return sublist of Advisors that can apply to an object of the given class
 	 * (may be the incoming List as-is)
+	 *
+	 * 通过给定的 Advisor候选列表，然后找到哪些Advisor可以处理给定的class。
 	 */
 	public static List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> clazz) {
 		if (candidateAdvisors.isEmpty()) {

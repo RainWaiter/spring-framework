@@ -342,14 +342,14 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy if we have advice.
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
-			this.advisedBeans.put(cacheKey, Boolean.TRUE);
+			this.advisedBeans.put(cacheKey, Boolean.TRUE);  // 缓存“已被代理”的标示
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
-			this.proxyTypes.put(cacheKey, proxy.getClass());
+			this.proxyTypes.put(cacheKey, proxy.getClass()); // 缓存代理class
 			return proxy;
 		}
 
-		this.advisedBeans.put(cacheKey, Boolean.FALSE);
+		this.advisedBeans.put(cacheKey, Boolean.FALSE); // 缓存“未被代理”的标示
 		return bean;
 	}
 
@@ -573,6 +573,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @throws BeansException in case of errors
 	 * @see #DO_NOT_PROXY
 	 * @see #PROXY_WITHOUT_ADDITIONAL_INTERCEPTORS
+	 *
+	 * 返回给定Bean的拦截器
 	 */
 	protected abstract Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, TargetSource customTargetSource) throws BeansException;

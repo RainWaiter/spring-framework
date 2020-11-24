@@ -26,7 +26,7 @@ ext {
 
 configure(allprojects) { project ->
 	group = "org.springframework"
-	version = qualifyVersionIfNecessary(version)
+	version = "4.3.30.BUILD-SNAPSHOT"// qualifyVersionIfNecessary(version)
 
 	ext.aspectjVersion       = "1.8.9"
 	ext.caffeineVersion      = "2.3.5"
@@ -84,6 +84,10 @@ configure(allprojects) { project ->
 	apply plugin: "java"
 	apply plugin: "test-source-set-dependencies"
 	apply from: "${gradleScriptDir}/ide.gradle"
+
+	// by liuy
+	apply plugin: 'maven'
+	apply plugin: 'eclipse'
 
 	configurations {
 		sniffer
@@ -260,8 +264,8 @@ configure(subprojects - project(":spring-build-src")) { subproject ->
 	}
 
 	artifacts {
-		archives sourcesJar
-		archives javadocJar
+		//archives sourcesJar
+		//archives javadocJar
 	}
 }
 
@@ -1342,9 +1346,9 @@ configure(rootProject) {
 	}
 
 	artifacts {
-		archives docsZip
-		archives schemaZip
-		archives distZip
+		//archives docsZip
+		//archives schemaZip
+		//archives distZip
 	}
 
 	wrapper {
