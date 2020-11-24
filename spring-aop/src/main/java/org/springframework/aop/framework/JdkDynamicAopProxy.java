@@ -186,6 +186,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			if (this.advised.exposeProxy) {
 				// Make invocation available if necessary.
 				/*
+				* 暴露代理：解决在目标方法中，调用相同对象的其他方法时，其他方法的切面逻辑无法执行的问题（例如事务、通知等）。
 				* 根据exposeProxy属性判断，如果设置为true（默认false），则
 				* 通过 AopContext.currentProxy() 可以得到当前线程正在调用的代理类对象proxy
 				* 一般情况下使用率不高。
@@ -202,6 +203,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			}
 
 			// Get the interception chain for this method.
+			// 根据目标method和class，获取拦截器列表(是一个有序的拦截器列表)
 			List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
 
 			// Check whether we have any advice. If we don't, we can fallback on direct

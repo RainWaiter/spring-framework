@@ -268,7 +268,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			throws Throwable {
 
 		// If the transaction attribute is null, the method is non-transactional.
+		// 根据method获取事务Attr
 		final TransactionAttribute txAttr = getTransactionAttributeSource().getTransactionAttribute(method, targetClass);
+		// 根据事务Attr 获取事务管理器  如果上下文存在多个，但是Attr没有指定，则抛出异常
 		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
 
@@ -381,16 +383,19 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 
 		String qualifier = txAttr.getQualifier();
 		if (StringUtils.hasText(qualifier)) {
+			// @Transaction指定了事务管理器的名称，也就是设置了value
 			return determineQualifiedTransactionManager(qualifier);
 		}
 		else if (StringUtils.hasText(this.transactionManagerBeanName)) {
 			return determineQualifiedTransactionManager(this.transactionManagerBeanName);
 		}
 		else {
+			// 默认的TransactionManager（TransactionManagementConfigurer接口可以指定默认的）
 			PlatformTransactionManager defaultTransactionManager = getTransactionManager();
 			if (defaultTransactionManager == null) {
 				defaultTransactionManager = this.transactionManagerCache.get(DEFAULT_TRANSACTION_MANAGER_KEY);
 				if (defaultTransactionManager == null) {
+					// 从IOC容器获得PlatformTransactionManager的Bean
 					defaultTransactionManager = this.beanFactory.getBean(PlatformTransactionManager.class);
 					this.transactionManagerCache.putIfAbsent(
 							DEFAULT_TRANSACTION_MANAGER_KEY, defaultTransactionManager);
@@ -603,6 +608,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	/**
 	 * Opaque object used to hold transaction information. Subclasses
 	 * must pass it back to methods on this class, but not see its internals.
+	 *
+	 * 事务对象，包含了事务所需的所有东西
 	 */
 	protected final class TransactionInfo {
 

@@ -1010,6 +1010,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		if (candidateNames.length == 1) {
+			// 给定的类型只有一个候选bean，直接返回，大部分情况是这样的
 			String beanName = candidateNames[0];
 			return new NamedBeanHolder<T>(beanName, getBean(beanName, requiredType, args));
 		}
@@ -1017,12 +1018,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Map<String, Object> candidates = new LinkedHashMap<String, Object>(candidateNames.length);
 			for (String beanName : candidateNames) {
 				if (containsSingleton(beanName)) {
+					// beanName已经标记是单例，则返回Bean，下面直接返回
 					candidates.put(beanName, getBean(beanName, requiredType, args));
 				}
 				else {
+					// beanName没有标记单例，则记录类型，下面会getBean
 					candidates.put(beanName, getType(beanName));
 				}
 			}
+			// 得到@Primary标记的候选Bean
 			String candidateName = determinePrimaryCandidate(candidates, requiredType);
 			if (candidateName == null) {
 				candidateName = determineHighestPriorityCandidate(candidates, requiredType);
@@ -1030,10 +1034,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (candidateName != null) {
 				Object beanInstance = candidates.get(candidateName);
 				if (beanInstance instanceof Class) {
+					// 上面的beanName没有标记单例，记录了类型，这里直接getBean得到实例
 					beanInstance = getBean(candidateName, requiredType, args);
 				}
 				return new NamedBeanHolder<T>(candidateName, (T) beanInstance);
 			}
+			// 给定类型存在多个Bean
 			throw new NoUniqueBeanDefinitionException(requiredType, candidates.keySet());
 		}
 
