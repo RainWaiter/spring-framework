@@ -328,24 +328,32 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @return a proxy wrapping the bean, or the raw bean instance as-is
 	 */
 	protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+		// 如果有必要的话，需要包装给定的Bean
+		// 其实就是根据需要给Bean加上一些拦截器以及通知等。
+
 		if (beanName != null && this.targetSourcedBeans.contains(beanName)) {
 			return bean;
 		}
 		if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
+			// 已经处理过该Bean && 当前Bean不存在代理无需包装
 			return bean;
 		}
 		if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
+			// bean是基础设施class || 需要跳过的class
 			this.advisedBeans.put(cacheKey, Boolean.FALSE);
 			return bean;
 		}
 
 		// Create proxy if we have advice.
+		// 获取给定bean匹配的拦截器列表
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);  // 缓存“已被代理”的标示
+			// 创建给bean的代理对象
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			this.proxyTypes.put(cacheKey, proxy.getClass()); // 缓存代理class
+			// 返回代理对象，也就是覆盖IOC中的真实bean
 			return proxy;
 		}
 
@@ -439,27 +447,34 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		ProxyFactory proxyFactory = new ProxyFactory();
+		// copy当前的配置信息
 		proxyFactory.copyFrom(this);
 
 		if (!proxyFactory.isProxyTargetClass()) {
 			if (shouldProxyTargetClass(beanClass, beanName)) {
+				// 只能使用cglib代理
 				proxyFactory.setProxyTargetClass(true);
 			}
 			else {
+				// 评估class的接口列表，看是否能够用jdk动态代理
 				evaluateProxyInterfaces(beanClass, proxyFactory);
 			}
 		}
 
+		// 构建Advisor 如果Interceptors存在advise则包装为Advisor
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
+		// advisors加入到代理工厂
 		proxyFactory.addAdvisors(advisors);
+		// targetSource加入到代理工厂
 		proxyFactory.setTargetSource(targetSource);
+		// 空实现
 		customizeProxyFactory(proxyFactory);
-
+		// 根据网上消息 frozen代表创建代理后，是否还允许更改代理配置
 		proxyFactory.setFrozen(this.freezeProxy);
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
-
+		// 从代理工厂获得Proxy对象(cglib or jdk代理) ---核心方法
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 
@@ -501,6 +516,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 */
 	protected Advisor[] buildAdvisors(String beanName, Object[] specificInterceptors) {
 		// Handle prototypes correctly...
+		// 得到common的拦截器列表
 		Advisor[] commonInterceptors = resolveInterceptorNames();
 
 		List<Object> allInterceptors = new ArrayList<Object>();
@@ -524,6 +540,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 		Advisor[] advisors = new Advisor[allInterceptors.size()];
 		for (int i = 0; i < allInterceptors.size(); i++) {
+			// advise 包装为 Advisor
 			advisors[i] = this.advisorAdapterRegistry.wrap(allInterceptors.get(i));
 		}
 		return advisors;
@@ -540,6 +557,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		for (String beanName : this.interceptorNames) {
 			if (cbf == null || !cbf.isCurrentlyInCreation(beanName)) {
 				Object next = this.beanFactory.getBean(beanName);
+				// 将 Advice 包装为 Advisor
 				advisors.add(this.advisorAdapterRegistry.wrap(next));
 			}
 		}

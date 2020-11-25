@@ -241,6 +241,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 */
 	@Override
 	public void afterPropertiesSet() {
+		// afterPropertiesSet()的经典用法：
+		// 校验bean的必要属性是否已经成功赋值
+
 		if (getTransactionManager() == null && this.beanFactory == null) {
 			throw new IllegalStateException(
 					"Set the 'transactionManager' property or make sure to run within a BeanFactory " +
@@ -263,22 +266,36 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * @param invocation the callback to use for proceeding with the target invocation
 	 * @return the return value of the method, if any
 	 * @throws Throwable propagated from the target invocation
+	 *
+	 *
+	 * invokeWithinTransaction()方法定义了事务的整体执行流程
+	 * 1. 获取事务
+	 * 2. 执行目标方法
+	 * 3. 执行事务： commit / rollback
 	 */
 	protected Object invokeWithinTransaction(Method method, Class<?> targetClass, final InvocationCallback invocation)
 			throws Throwable {
 
 		// If the transaction attribute is null, the method is non-transactional.
-		// 根据method获取事务Attr
+		// 通过TransactionAttributeSource事务属性源对象，查询method对应的事务Attr
 		final TransactionAttribute txAttr = getTransactionAttributeSource().getTransactionAttribute(method, targetClass);
 		// 根据事务Attr 获取事务管理器  如果上下文存在多个，但是Attr没有指定，则抛出异常
 		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
 
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
-			// 非回调类
+			// 非回调类事务管理器
+			// 大部分的PlatformTransactionManager都走条路
+			// 目前spring-tx-4.3.7版本只有 WebSphereUowTransactionManager 是 CallbackPreferringPlatformTransactionManager 的实现类  ( 一种分布式事务管理器  )
 
-			// 按需创建事务
+			/*
+			* 事务的AOP拦截就类似一个Around通知，
+			* 1. 方法执行前： 开始前获取事务
+			* 2. 执行目标方法
+			* 3. 方法执行后： commit / rollback
+			* */
 			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			// 按需创建事务
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 
 			Object retVal;
@@ -473,7 +490,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		TransactionStatus status = null;
 		if (txAttr != null) {
 			if (tm != null) {
-				// 获取事务
+				// 委托PlatformTransactionManager获取事务
 				status = tm.getTransaction(txAttr);
 			}
 			else {

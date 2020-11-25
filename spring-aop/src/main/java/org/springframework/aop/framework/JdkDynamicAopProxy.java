@@ -203,7 +203,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			}
 
 			// Get the interception chain for this method.
-			// 根据目标method和class，获取拦截器列表(是一个有序的拦截器列表)
+			// 根据目标method和class，获取拦截器列表(是一个有序的拦截器列表), 例如事务拦截器、前置、后置、异常的AOP通知等。
 			List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
 
 			// Check whether we have any advice. If we don't, we can fallback on direct

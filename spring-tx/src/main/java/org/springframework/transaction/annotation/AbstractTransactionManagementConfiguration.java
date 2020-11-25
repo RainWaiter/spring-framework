@@ -53,6 +53,7 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
+		// 将@EnableTransactionManagement注解的属性封装为AnnotationAttributes
 		this.enableTx = AnnotationAttributes.fromMap(
 				importMetadata.getAnnotationAttributes(EnableTransactionManagement.class.getName(), false));
 		if (this.enableTx == null) {
@@ -70,6 +71,7 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 			throw new IllegalStateException("Only one TransactionManagementConfigurer may exist");
 		}
 		TransactionManagementConfigurer configurer = configurers.iterator().next();
+		// 实现了TransactionManagementConfigurer接口，就是指定默认的TransactionManager
 		this.txManager = configurer.annotationDrivenTransactionManager();
 	}
 

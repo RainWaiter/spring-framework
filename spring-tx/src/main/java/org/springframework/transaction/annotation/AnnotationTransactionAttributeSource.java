@@ -152,7 +152,7 @@ public class AnnotationTransactionAttributeSource extends AbstractFallbackTransa
 		if (element.getAnnotations().length > 0) {
 			for (TransactionAnnotationParser annotationParser : this.annotationParsers) {
 				// 循环annotationParser解析类来解析
-				// 通常是 SpringTransactionAnnotationParser 来解析
+				// Spring的@Transaction注解就是 SpringTransactionAnnotationParser 来解析
 				TransactionAttribute attr = annotationParser.parseTransactionAnnotation(element);
 				if (attr != null) {
 					return attr;

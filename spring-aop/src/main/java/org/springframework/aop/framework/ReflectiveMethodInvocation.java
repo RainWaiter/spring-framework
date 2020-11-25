@@ -166,13 +166,14 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 			InterceptorAndDynamicMethodMatcher dm =
 					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			// 动态匹配class、method、参数
+			// 例如带有表达式的AOP通知等
 			if (dm.methodMatcher.matches(this.method, this.targetClass, this.arguments)) {
 				return dm.interceptor.invoke(this);
 			}
 			else {
 				// Dynamic matching failed.
 				// Skip this interceptor and invoke the next in the chain.
-				// 匹配失败 跳过当前Advice
+				// 匹配失败 跳过当前Advice, 执行下一个
 				return proceed();
 			}
 		}

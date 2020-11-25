@@ -1611,10 +1611,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 后置处理器： postProcessBeforeInitialization()
+			// 执行若干的BeanPostProcessor.postProcessBeforeInitialization()
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
+			// 执行Bean的初始化方法，例如bean实现了InitializingBean, 则执行afterPropertiesSet()
+			// 或者bean定义了自定义的init方法，则反射执行
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {
@@ -1624,6 +1627,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 后置处理器： postProcessAfterInitialization()
+			// 执行若干的BeanPostProcessor.postProcessAfterInitialization()
+			// 这里通常会返回wrappedBean代理
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 		return wrappedBean;

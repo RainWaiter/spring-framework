@@ -62,6 +62,8 @@ public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice
 	@Override
 	public void afterReturning(Object returnValue, Method method, Object[] args, Object target) throws Throwable {
 		if (shouldInvokeOnReturnValueOf(method, returnValue)) {
+			// 返回值通知
+			// 1. 如果满足要求，则执行通知内容
 			invokeAdviceMethod(getJoinPointMatch(), returnValue, null);
 		}
 	}

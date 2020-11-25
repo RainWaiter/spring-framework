@@ -75,9 +75,10 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * <p>As this base class is not marked Serializable, the cache will be recreated
 	 * after serialization - provided that the concrete subclass is Serializable.
 	 *
-	 * 映射:
-	 * 类的方法 -> TransactionAttribute
-	 * 典型的，当Spring解析到方法、类上面带有 @Transaction注解 ， 那么会将类方法和TransactionAttribute进行关联映射到此缓存
+	 * Map映射关系:
+	 * key   = 类的method对象
+	 * value = TransactionAttribute对象
+	 * 典型的，当Spring解析到方法、类上面带有 @Transaction注解 ， 那么会将method和TransactionAttribute进行关联映射到此缓存
 	 */
 	private final Map<Object, TransactionAttribute> attributeCache =
 			new ConcurrentHashMap<Object, TransactionAttribute>(1024);

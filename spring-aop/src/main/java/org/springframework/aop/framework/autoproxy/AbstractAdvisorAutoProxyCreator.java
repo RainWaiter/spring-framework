@@ -85,10 +85,22 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+		// 查找所有候选 Advisor
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
+		// 从候选Advisor中查找时候当前bean的Advisor
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
+		/*
+		 * Acvisor加入扩展
+		 * 如果eligibleAdvisors中存在AspectJ相关的通知，
+		 * 则会在eligibleAdvisors的第0个位置加入一个 org.springframework.aop.interceptor.ExposeInvocationInterceptor.ADVISOR 的Advisor
+		 * 该Advisor作用就是：
+		 *   暴露当前MethodInvocation，也就是将当前执行的MethodInvocation放入ThreadLocal中，方便chain中获取
+		 *   具体哪个代码中用了待研究 TODO
+		 */
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {
+			// 排序 通常根据Ordered.getOrder()进行排序
+			// 也就是为什么拦截器chain中会以特定顺序执行的原因
 			eligibleAdvisors = sortAdvisors(eligibleAdvisors);
 		}
 		return eligibleAdvisors;

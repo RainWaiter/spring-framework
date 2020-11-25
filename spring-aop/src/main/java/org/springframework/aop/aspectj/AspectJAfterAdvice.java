@@ -43,10 +43,13 @@ public class AspectJAfterAdvice extends AbstractAspectJAdvice
 
 	@Override
 	public Object invoke(MethodInvocation mi) throws Throwable {
+		// 后置通知
 		try {
+			// 1. 先执行下一个chain
 			return mi.proceed();
 		}
 		finally {
+			// 2. 再执行通知的逻辑方法
 			invokeAdviceMethod(getJoinPointMatch(), null, null);
 		}
 	}
