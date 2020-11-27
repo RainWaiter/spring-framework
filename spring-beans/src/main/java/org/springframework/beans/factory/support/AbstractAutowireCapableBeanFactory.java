@@ -1594,17 +1594,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd) {
 
-		// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 		if (System.getSecurityManager() != null) {
 			AccessController.doPrivileged(new PrivilegedAction<Object>() {
 				@Override
 				public Object run() {
+					// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 					invokeAwareMethods(beanName, bean);
 					return null;
 				}
 			}, getAccessControlContext());
 		}
 		else {
+			// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 			invokeAwareMethods(beanName, bean);
 		}
 
@@ -1628,7 +1629,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 后置处理器： postProcessAfterInitialization()
 			// 执行若干的BeanPostProcessor.postProcessAfterInitialization()
-			// 这里通常会返回wrappedBean代理
+			// 很多bean增强就是在这里进行代理包装，例如@Transaction等注解
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 		return wrappedBean;
@@ -1673,6 +1674,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
 						@Override
 						public Object run() throws Exception {
+							// 调用 afterPropertiesSet()
 							((InitializingBean) bean).afterPropertiesSet();
 							return null;
 						}
@@ -1683,6 +1685,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 			else {
+				// 调用 afterPropertiesSet()
 				((InitializingBean) bean).afterPropertiesSet();
 			}
 		}
@@ -1691,6 +1694,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			String initMethodName = mbd.getInitMethodName();
 			if (initMethodName != null && !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
 					!mbd.isExternallyManagedInitMethod(initMethodName)) {
+				// 调用 自定义init方法
 				invokeCustomInitMethod(beanName, bean, mbd);
 			}
 		}
