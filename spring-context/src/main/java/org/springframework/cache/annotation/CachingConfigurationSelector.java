@@ -80,8 +80,8 @@ public class CachingConfigurationSelector extends AdviceModeImportSelector<Enabl
 	 */
 	private String[] getProxyImports() {
 		List<String> result = new ArrayList<String>(3);
-		result.add(AutoProxyRegistrar.class.getName());
-		result.add(ProxyCachingConfiguration.class.getName());
+		result.add(AutoProxyRegistrar.class.getName());        // 通用的自动代理Registrar,注册Bean
+		result.add(ProxyCachingConfiguration.class.getName()); // Cache相关的Bean注入(例如：Advisor、Interceptor等)
 		if (jsr107Present && jcacheImplPresent) {
 			result.add(PROXY_JCACHE_CONFIGURATION_CLASS);
 		}

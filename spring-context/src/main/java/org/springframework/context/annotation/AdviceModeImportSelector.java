@@ -62,9 +62,9 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 	 */
 	@Override
 	public final String[] selectImports(AnnotationMetadata importingClassMetadata) {
-		// annType为@EnableTransactionManagement注解类型
+		// annType为例如 @EnableTransactionManagement注解类型 / @EnableCaching注解
 		Class<?> annType = GenericTypeResolver.resolveTypeArgument(getClass(), AdviceModeImportSelector.class);
-		// 得到@EnableTransactionManagement属性数据，例如： {order=2147483647, mode=PROXY, proxyTargetClass=false}
+		// 得到@EnableTransactionManagement / @EnableCaching属性数据，例如： {order=2147483647, mode=PROXY, proxyTargetClass=false}
 		AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(importingClassMetadata, annType);
 		if (attributes == null) {
 			throw new IllegalArgumentException(String.format(
@@ -73,7 +73,9 @@ public abstract class AdviceModeImportSelector<A extends Annotation> implements 
 		}
 		// adviceMode通常为PROXY
 		AdviceMode adviceMode = attributes.getEnum(getAdviceModeAttributeName());
-		// 交给子类导出选择器class，事务方面的子类是：TransactionManagementConfigurationSelector
+		// 交给子类导出选择器class
+		// 事务方面的子类是 ：TransactionManagementConfigurationSelector、
+		// Cache缓存的子类是: CachingConfigurationSelector
 		String[] imports = selectImports(adviceMode);
 		if (imports == null) {
 			throw new IllegalArgumentException("Unknown AdviceMode: " + adviceMode);

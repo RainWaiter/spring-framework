@@ -76,6 +76,8 @@ public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 					// 代理模式 （ registry为IOC容器 ）
 					AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
 					if ((Boolean) proxyTargetClass) {
+						// 如果当前注解 proxyTargetClass为True，
+						// 则全局都是设置为True，也就是说都采用cglib代理
 						AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
 						return;
 					}

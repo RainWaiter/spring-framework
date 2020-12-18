@@ -167,6 +167,10 @@ public @interface EnableTransactionManagement {
 	 * {@code @Async} annotation will be upgraded to subclass proxying at the same
 	 * time. This approach has no negative impact in practice unless one is explicitly
 	 * expecting one type of proxy vs another, e.g. in tests.
+	 *
+	 * 作用： 决定是否用CGlib 还是 JDK动态代理
+	 * 注意： 这是一个全局属性，
+	 *       例如： @Transactional 的 proxyTargetClass 为true， 那么 @Cachable 等代理都会用cglib了。
 	 */
 	boolean proxyTargetClass() default false;
 

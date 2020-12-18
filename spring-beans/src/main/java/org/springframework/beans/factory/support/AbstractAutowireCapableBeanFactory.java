@@ -548,6 +548,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			// 填充属性
 			populateBean(beanName, mbd, instanceWrapper);
 			if (exposedObject != null) {
 				exposedObject = initializeBean(beanName, exposedObject, mbd);
@@ -1594,29 +1595,31 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd) {
 
+		// 1.
+		// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 		if (System.getSecurityManager() != null) {
 			AccessController.doPrivileged(new PrivilegedAction<Object>() {
 				@Override
 				public Object run() {
-					// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 					invokeAwareMethods(beanName, bean);
 					return null;
 				}
 			}, getAccessControlContext());
 		}
 		else {
-			// 如果Bean实现了xxxAware接口，则执行相关方法注入各种xxAware
 			invokeAwareMethods(beanName, bean);
 		}
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
+			// 2.
 			// 后置处理器： postProcessBeforeInitialization()
 			// 执行若干的BeanPostProcessor.postProcessBeforeInitialization()
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
+			// 3.
 			// 执行Bean的初始化方法，例如bean实现了InitializingBean, 则执行afterPropertiesSet()
 			// 或者bean定义了自定义的init方法，则反射执行
 			invokeInitMethods(beanName, wrappedBean, mbd);
@@ -1627,6 +1630,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
+			// 4.
 			// 后置处理器： postProcessAfterInitialization()
 			// 执行若干的BeanPostProcessor.postProcessAfterInitialization()
 			// 很多bean增强就是在这里进行代理包装，例如@Transaction等注解
@@ -1663,7 +1667,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected void invokeInitMethods(String beanName, final Object bean, RootBeanDefinition mbd)
 			throws Throwable {
-
+		// 1.
+		// 调用 afterPropertiesSet()
 		boolean isInitializingBean = (bean instanceof InitializingBean);
 		if (isInitializingBean && (mbd == null || !mbd.isExternallyManagedInitMethod("afterPropertiesSet"))) {
 			if (logger.isDebugEnabled()) {
@@ -1674,7 +1679,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
 						@Override
 						public Object run() throws Exception {
-							// 调用 afterPropertiesSet()
 							((InitializingBean) bean).afterPropertiesSet();
 							return null;
 						}
@@ -1685,16 +1689,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 			else {
-				// 调用 afterPropertiesSet()
 				((InitializingBean) bean).afterPropertiesSet();
 			}
 		}
 
 		if (mbd != null) {
+			// 2.
+			// 调用 自定义init方法( 反射 )
 			String initMethodName = mbd.getInitMethodName();
 			if (initMethodName != null && !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
 					!mbd.isExternallyManagedInitMethod(initMethodName)) {
-				// 调用 自定义init方法
 				invokeCustomInitMethod(beanName, bean, mbd);
 			}
 		}
