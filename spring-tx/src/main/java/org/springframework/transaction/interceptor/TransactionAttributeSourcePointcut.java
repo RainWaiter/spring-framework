@@ -37,6 +37,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 		if (targetClass != null && TransactionalProxy.class.isAssignableFrom(targetClass)) {
 			return false;
 		}
+		// 获得属性源头（ 参考：  TransactionAttributeSourceAdvisor.pointcut 内部类 ）
 		TransactionAttributeSource tas = getTransactionAttributeSource();
 		return (tas == null || tas.getTransactionAttribute(method, targetClass) != null);
 	}

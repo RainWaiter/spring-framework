@@ -94,6 +94,10 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 */
 	@Override
 	public TransactionAttribute getTransactionAttribute(Method method, Class<?> targetClass) {
+		/*
+		 * 获取class中某个method的事务属性
+		 */
+
 		if (method.getDeclaringClass() == Object.class) {
 			// object的方法不支持事务
 			return null;

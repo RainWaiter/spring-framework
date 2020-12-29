@@ -211,6 +211,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * @see org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
 	 */
 	public void setTransactionAttributeSource(TransactionAttributeSource transactionAttributeSource) {
+		// @Transaction默认情况下, transactionAttributeSource 为： AnnotationTransactionAttributeSource 实例
+		// 参考： ProxyTransactionManagementConfiguration.java
 		this.transactionAttributeSource = transactionAttributeSource;
 	}
 
